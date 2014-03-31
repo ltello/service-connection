@@ -6,6 +6,7 @@ PATH
 
 GEM
   remote: https://rubygems.org/
+  remote: http://michelangelo:davinci@git.ideas4all.com:9292/
   specs:
     authorizator-client (0.0.1)
       oauth2 (~> 0.9.3)
