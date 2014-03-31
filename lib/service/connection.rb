@@ -7,7 +7,6 @@ module Service
   # An instance of this class is the way an ideas4all service call endpoints of another one.
   # It provides get, post, put, patch, headers, delete... methods to access a called service endpoints. Authorization
   # and security concerns are transparent to the caller service.
-
   class Connection
     # Hashes of info of the two services talking via this connection.
     attr_accessor :caller_service, :called_service
