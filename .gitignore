@@ -62,8 +62,8 @@ nbproject
 *.rbc
 
 # RVM / rbenv
-.ruby-version
-.ruby-gemset
+# .ruby-version
+# .ruby-gemset
 .rvmrc
 
 # Vim
