@@ -11,6 +11,9 @@
 /db/*.sqlite3
 /db/*.sqlite3-journal
 
+# Ignore gem building folder: pkg
+pkg
+
 # Ignore log and tmp files
 log/*
 *.log
