@@ -9,15 +9,16 @@ module Service
   # and security concerns are transparent to the caller service.
   class Connection
     # Hashes of info of the two services talking via this connection.
-    attr_accessor :caller_service, :called_service
+    attr_accessor :caller_service, :called_service, :authorizator_service
 
     # Initializes a ServiceConnection
     #
     # @param [Hash] caller_service_data including at least :client_id and :client_secret
     # @param [Hash] called_service_data including at least :site
-    def initialize(services_data = {})
-      @caller_service = services_data[:caller_service_data]
-      @called_service = services_data[:called_service_data]
+    def initialize(caller_service:, called_service:, authorizator_service:)
+      @caller_service       = caller_service
+      @called_service       = called_service
+      @authorizator_service = authorizator_service
       check_services_data!
     end
 
@@ -69,19 +70,11 @@ module Service
 
     private
 
-      # Properties :client_id and :client_secret of the caller service.
-      #
-      # @returns [Hash] a hash of caller service credential values
-      def caller_service_credentials
-        {:client_id     => caller_service[:client_id],
-         :client_secret => caller_service[:client_secret]}
-      end
-
       # The client to be able to access the Authorizator service.
       #
       # @returns [Authorizator::Client] instance.
       def authorizator_client
-        @authorizator_client ||= Authorizator::Client.new(caller_service_credentials)
+        @authorizator_client ||= Authorizator::Client.new(caller_service: caller_service, authorizator_service: authorizator_service)
       end
 
       # The Service::Connection::TalkingToken instance from where to access the target service endpoints in a secured way.
@@ -97,9 +90,9 @@ module Service
       #
       # @returns [OAuth2::Client] instance.
       def client
-        @client = OAuth2::Client.new(caller_service[:client_id],
-                                     caller_service[:client_secret],
-                                     :site         => called_service[:site],
+        @client = OAuth2::Client.new(caller_service.client_id,
+                                     caller_service.client_secret,
+                                     :site         => called_service.site,
                                      :raise_errors => false)
       end
 
@@ -116,9 +109,10 @@ module Service
       end
 
       def check_services_data!
-        caller_service.fetch(:client_id)     rescue raise("Must provide :caller_service_data hash including :client_id k-v pair")
-        caller_service.fetch(:client_secret) rescue raise("Must provide :caller_service_data hash including :client_secret k-v pair")
-        called_service.fetch(:site)          rescue raise("Must provide :called_service_data hash including :site k-v pair")
+        raise("Must provide caller_service client_id value")     unless caller_service.respond_to?(:client_id)
+        raise("Must provide caller_service client_secret value") unless caller_service.respond_to?(:client_secret)
+        raise("Must provide called_service site value")          unless called_service.respond_to?(:site)
+        raise("Must provide authorizator_service")               unless authorizator_service
       end
 
   end
