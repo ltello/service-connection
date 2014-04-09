@@ -5,16 +5,17 @@ require "service/connection/talking_token"
 module Service
 
   # An instance of this class is the way an ideas4all service call endpoints of another one.
-  # It provides get, post, put, patch, headers, delete... methods to access a called service endpoints. Authorization
-  # and security concerns are transparent to the caller service.
+  # It provides get, post, put, patch, headers, delete... methods to access a called service's endpoints.
+  # Authorization and security concerns are transparent to the caller service.
   class Connection
     # Hashes of info of the two services talking via this connection.
     attr_accessor :caller_service, :called_service, :authorizator_service
 
     # Initializes a ServiceConnection
     #
-    # @param [Hash] caller_service_data including at least :client_id and :client_secret
-    # @param [Hash] called_service_data including at least :site
+    # @param [Object] caller_service responding at least to :client_id and :client_secret
+    # @param [Object] called_service responding at least to :site
+    # @param [Object] authorizator_service
     def initialize(caller_service:, called_service:, authorizator_service:)
       @caller_service       = caller_service
       @called_service       = called_service
@@ -78,7 +79,7 @@ module Service
       end
 
       # The Service::Connection::TalkingToken instance from where to access the target service endpoints in a secured way.
-      # Calls the Authorizator service to get the currently valid talking token in case it was expired? or not exist.
+      # Calls the Authorizator service to get ta new valid talking token in case the stored is expired? or dont exist.
       #
       # @return [OAuth2::AccessToken] instance.
       def talking_token
@@ -108,6 +109,9 @@ module Service
         resp
       end
 
+      # Checks that the provided service objects when initializing a Service::Connection, respond to some needed methods.
+      #
+      # Raises exceptions in case the check fails.
       def check_services_data!
         raise("Must provide caller_service client_id value")     unless caller_service.respond_to?(:client_id)
         raise("Must provide caller_service client_secret value") unless caller_service.respond_to?(:client_secret)
