@@ -8,6 +8,10 @@ module Service
   # It provides get, post, put, patch, headers, delete... methods to access a called service's endpoints.
   # Authorization and security concerns are transparent to the caller service.
   class Connection
+
+    # The error codes a remote service reports when receiving a request with an invalid talking token.
+    REMOTE_SERVICE_INVALID_TALKING_TOKEN_ERROR_CODES = ['invalid_token', 'invalid_talking_token']
+
     # Hashes of info of the two services talking via this connection.
     attr_accessor :caller_service, :called_service, :authorizator_service
 
@@ -102,12 +106,20 @@ module Service
       #   retry the block call, so the access_token will get renewed when calling #access_token again.
       def renewing_talking_token_if_needed(&block)
         resp = block.call
-        if (resp.error and resp.error.code == "Invalid Talking Token")
+        if invalid_remote_reponse?(resp)
           @talking_token = nil
           resp = block.call
+          error = invalid_remote_reponse?(resp)
+          raise(error) if error
         end
         resp
       end
+
+        def invalid_remote_reponse?(resp)
+          return false unless (resp.respond_to?(:error) and resp.error)
+          return resp.error.code if REMOTE_SERVICE_INVALID_TALKING_TOKEN_ERROR_CODES.include?(resp.error.code)
+          false
+        end
 
       # Checks that the provided service objects when initializing a Service::Connection, respond to some needed methods.
       #
