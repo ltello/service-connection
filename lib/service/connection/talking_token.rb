@@ -5,6 +5,10 @@ module Service
 
     # A class to create talking token instances. Inherits behaviour from Oauth2::AccessToken.
     class TalkingToken < ::OAuth2::AccessToken
+
+      def scopes
+        params['scopes']
+      end
     end
 
   end
