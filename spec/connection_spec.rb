@@ -18,31 +18,30 @@ describe "The service-connection gem is the messenger among ideas4all services. 
     let(:authorizator_service_site)          {'http://localhost:3000'}
     let(:authorizator_service)               {service_class.new(nil, nil, authorizator_service_site)}
     let(:authorizator_client)                {Authorizator::Client.new(caller_service:caller_service, authorizator_service:authorizator_service)}
-
-    # let(:authorizator_client)         {Authorizator::Client.new(valid_caller_service_credentials)}
-    # let(:authorizator_service_site)   {Authorizator::Client::AUTHORIZATOR_SERVICE_SITE}
-    # let(:valid_access_token_value)    {'567890123456789012345678901234567890'}
-    # let(:access_token_type)           {'bearer'}
-    # let(:access_token_expires_in)     {'500'}
-    # let(:access_token_scope)          {'myself'}
-    # let(:valid_access_token_data)     {{'access_token' => valid_access_token_value,
-    #                                     'token_type'   => access_token_type,
-    #                                     'expires_in'   => access_token_expires_in,
-    #                                     'scope'        => access_token_scope}}
-    # let(:valid_talking_token_value)   {'1234567890123456789012345678901234567890'}
-    # let(:talking_token_type)          {'bearer'}
-    # let(:talking_token_expires_in)    {'1000'}
-    # let(:talking_token_scope)         {'service_mate'}
-    # let(:valid_talking_token_data)    {{'access_token' => valid_talking_token_value,
-    #                                     'token_type'   => talking_token_type,
-    #                                     'expires_in'   => talking_token_expires_in,
-    #                                     'scope'        => talking_token_scope}}
-    # let(:new_client_application)      {double(:client_credentials => double(:get_token => valid_access_token_data))}
-
+    let(:valid_talking_token_value)   {'1234567890123456789012345678901234567890'}
+    let(:talking_token_type)          {'bearer'}
+    let(:talking_token_expires_in)    {'1000'}
+    let(:talking_token_scope)         {'service_mate'}
+    let(:valid_talking_token_data)    {{'access_token' => valid_talking_token_value,
+                                        'token_type'   => talking_token_type,
+                                        'expires_in'   => talking_token_expires_in,
+                                        'scope'        => talking_token_scope}}
+    let(:new_client_application)      {double(:request => double(:parsed => nil))}
+    let(:talking_token)               {Service::Connection::TalkingToken.new(caller_service:caller_service, called_service:called_service, authorizator_service:authorizator_service)}
     let(:service_connection) {Service::Connection.new(caller_service:       caller_service,
                                                       called_service:       called_service,
                                                       authorizator_service: authorizator_service)}
+
     context "- Instantiation:" do
+
+      shared_examples "an error unless" do |title|
+        it title do
+          expect {Service::Connection.new(caller_service:       caller_service,
+                                          called_service:       called_service,
+                                          authorizator_service: authorizator_service)}.to raise_error
+        end
+      end
+
       it "To create a Service::Connection instance you must provide three objects: :caller_service and :called_service and :authorizator_service." do
         expect(service_connection).to be_a(Service::Connection)
       end
@@ -56,32 +55,32 @@ describe "The service-connection gem is the messenger among ideas4all services. 
         expect{Service::Connection.new(called_service: called_service, authorizator_service: authorizator_service)}.to raise_error(ArgumentError)
       end
 
-      it "<caller_service> object must respond to #client_id..." do
-        invalid_service_class = Struct.new(:client_secret, :site)
-        caller_service        = invalid_service_class.new(valid_caller_service_client_secret, valid_caller_service_site)
-        expect {Service::Connection.new(caller_service:       caller_service,
-                                        called_service:       called_service,
-                                        authorizator_service: authorizator_service)}.to raise_error
+      alias_it_behaves_like_to :also_raise, "also, raise"
+
+      also_raise "an error unless", "<caller_service> object responds to #client_id..."  do
+        let(:invalid_service_class) {Struct.new(:client_secret, :site)}
+        let(:caller_service)        {invalid_service_class.new(valid_caller_service_client_secret, valid_caller_service_site)}
       end
 
-      it "...and :client_secret." do
-        invalid_service_class = Struct.new(:client_id, :site)
-        caller_service        = invalid_service_class.new(valid_caller_service_client_id, valid_caller_service_site)
-        expect {Service::Connection.new(caller_service:       caller_service,
-                                        called_service:       called_service,
-                                        authorizator_service: authorizator_service)}.to raise_error
+      also_raise "an error unless", "<caller_service> object responds to :client_secret." do
+        let(:invalid_service_class) {Struct.new(:client_id, :site)}
+        let(:caller_service)        {invalid_service_class.new(valid_caller_service_client_id, valid_caller_service_site)}
       end
 
-      it "<called_service> object must respond to #site." do
-        invalid_service_class = Struct.new(:client_id, :client_secret)
-        called_service        = invalid_service_class.new(valid_called_service_client_id, valid_called_service_client_secret)
-        expect {Service::Connection.new(caller_service:       caller_service,
-                                        called_service:       called_service,
-                                        authorizator_service: authorizator_service)}.to raise_error
+      also_raise "an error unless", "<called_service> object responds to #site." do
+        let(:invalid_service_class) {Struct.new(:client_id, :client_secret)}
+        let(:called_service)        {invalid_service_class.new(valid_called_service_client_id, valid_called_service_client_secret)}
+      end
+
+      also_raise "an error unless", "<authorizator_service> object responds to #site." do
+        let(:invalid_service_class) {Struct.new(:client_id, :client_secret)}
+        let(:authorizator_service)  {invalid_service_class.new(nil, nil)}
       end
     end
 
+
     context "- Interface" do
+
       context "#caller_service" do
         it "returns an object representing the caller service..." do
           expect(service_connection.caller_service).to eq(caller_service)
@@ -100,25 +99,57 @@ describe "The service-connection gem is the messenger among ideas4all services. 
         end
       end
 
-      it "many more missing tests", pending:true do end
+      context "The following methods are provided to make requests to the called service endpoints.
+               To do that, the processing is forwarded to an OAuth2::Client instance.
+               See its documentation for a list of opts allowed (:params, :body...) and the use of the &block:" do
+        before(:each) do
+          authorizator_client.stub(:talking_token).and_return(valid_talking_token_data)
+          Authorizator::Client.stub(:new).and_return(authorizator_client)
+          OAuth2::Client.stub(:new).and_return(new_client_application)
+          service_connection.stub(:talking_token).and_return(talking_token)
+        end
 
-      # context "#talking_token: every pair of ideas4all services need a talking token to be able to communicate each other.
-      #                         This token is returned by the Authorizator service only to its previously registered services." do
-      #   context "   When called for the first time..." do
-      #     before(:each) do
-      #       authorizator_client.stub(:new_client_application).and_return(new_client_application)
-      #       valid_access_token_data.stub(:get).and_return(valid_talking_token_data)
-      #       valid_talking_token_data.stub(:parsed).and_return(valid_talking_token_data)
-      #     end
-#
-      #     it "... a new oauth2 client instance to be able to reach the Authorizator service api is created and stored." do
-      #       authorizator_client.talking_token
-      #       client_application_cache = authorizator_client.instance_variable_get(:@client_application)
-      #       expect(authorizator_client).to have_received(:new_client_application)
-      #       expect(client_application_cache).not_to be_nil
-      #     end
-      #   end
-      # end
+        it "#headers:
+            returns the Authorization header to be sent in every request to the Called service." do
+            expect(service_connection.headers).to eq({"Authorization" => "Bearer #{valid_talking_token_value}"})
+        end
+
+        it "#get(endpoint_relative_path, opts={}, &block):
+            makes a <get> request to the Authorizator service endpoint in <endpoint_relative_path> passing the given <opts>
+            and including <Authorization header> with the talking token's token value" do
+            service_connection.get('/path_to_called_service_endpoint', params: {id:7})
+            expect(new_client_application).to have_received(:request).with(:get, '/path_to_called_service_endpoint', {params: {id:7}}.merge!(headers: service_connection.headers)).once
+        end
+
+        it "#post(endpoint_relative_path, opts={}, &block):
+            makes a <post> request to the Authorizator service endpoint in <endpoint_relative_path> passing the given <opts>
+            and including <Authorization header> with the talking token's token value" do
+            service_connection.post('/path_to_called_service_endpoint', body: {id:7})
+            expect(new_client_application).to have_received(:request).with(:post, '/path_to_called_service_endpoint', {body: {id:7}}.merge!(headers: service_connection.headers)).once
+        end
+
+        it "#put(endpoint_relative_path, opts={}, &block):
+            makes a <put> request to the Authorizator service endpoint in <endpoint_relative_path> passing the given <opts>
+            and including <Authorization header> with the talking token's token value" do
+            service_connection.put('/path_to_called_service_endpoint', body: {id:7})
+            expect(new_client_application).to have_received(:request).with(:put, '/path_to_called_service_endpoint', {body: {id:7}}.merge!(headers: service_connection.headers)).once
+        end
+
+        it "#patch(endpoint_relative_path, opts={}, &block):
+            makes a <patch> request to the Authorizator service endpoint in <endpoint_relative_path> passing the given <opts>
+            and including <Authorization header> with the talking token's token value" do
+            service_connection.patch('/path_to_called_service_endpoint', body: {id:7})
+            expect(new_client_application).to have_received(:request).with(:patch, '/path_to_called_service_endpoint', {body: {id:7}}.merge!(headers: service_connection.headers)).once
+        end
+
+        it "#delete(endpoint_relative_path, opts={}, &block):
+            makes a <delete> request to the Authorizator service endpoint in <endpoint_relative_path> passing the given <opts>
+            and including <Authorization header> with the talking token's token value" do
+            service_connection.delete('/path_to_called_service_endpoint', body: {id:7})
+            expect(new_client_application).to have_received(:request).with(:delete, '/path_to_called_service_endpoint', {body: {id:7}}.merge!(headers: service_connection.headers)).once
+        end
+      end
+
     end
   end
 end
