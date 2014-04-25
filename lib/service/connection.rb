@@ -6,6 +6,7 @@ module Service
   # An instance of this class is the way an ideas4all service call endpoints of another one.
   # It provides get, post, put, patch, headers, delete... methods to access a called service's endpoints.
   # Authorization and security concerns are transparent to the caller service.
+  # @see spec/README_FOR_* files for documentation of how to use this gem!.
   class Connection
     include Request
 
@@ -16,7 +17,7 @@ module Service
     #
     # @param [Object] caller_service responding at least to :client_id and :client_secret
     # @param [Object] called_service responding at least to :site
-    # @param [Object] authorizator_service
+    # @param [Object] authorizator_service responding at least to :site
     def initialize(caller_service:, called_service:, authorizator_service:)
       @caller_service       = caller_service
       @called_service       = called_service

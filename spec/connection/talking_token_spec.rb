@@ -1,6 +1,6 @@
 require 'spec_helper'
 
-describe "An talking token is an object whose value must be included in the Authorization header of any request
+describe "A talking token is an object whose value must be included in the Authorization header of any request
           to an ideas4all service for it to give access to its protected resources (api) to external caller services." do
 
   context "Service::Connection::TalkingToken: is the class representing obtained talking tokens from the

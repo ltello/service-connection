@@ -1,6 +1,11 @@
 # Service::Connection
 
-TODO: Write a gem description
+The service-connection gem is the messenger among ideas4all services. It:
+
+  - allows the caller service to access the called service's endpoints.
+  - transport protocol is transparent for the caller.
+  - the communication is secured via Oauth2 protocol and ideas4all authorized talking-token mechanism.
+
 
 ## Installation
 
@@ -16,14 +21,11 @@ Or install it yourself as:
 
     $ gem install service-connection
 
+
 ## Usage
 
-TODO: Write usage instructions here
+Run
 
-## Contributing
+    bundle exec rspec spec/README_FOR_USERS_spec.rb
 
-1. Fork it ( http://github.com/<my-github-username>/service-connection/fork )
-2. Create your feature branch (`git checkout -b my-new-feature`)
-3. Commit your changes (`git commit -am 'Add some feature'`)
-4. Push to the branch (`git push origin my-new-feature`)
-5. Create new Pull Request
+test to see info of how to use this gem.
