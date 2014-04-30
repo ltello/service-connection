@@ -16,7 +16,7 @@ describe 'Requests to the Called service endpoints are made via a Service::Conne
   let(:authorizator_client)                {Authorizator::Client.new(caller_service:caller_service, authorizator_service:authorizator_service)}
   let(:valid_talking_token_value)   {'1234567890123456789012345678901234567890'}
   let(:talking_token_type)          {'bearer'}
-  let(:talking_token_expires_in)    {'1000'}
+  let(:talking_token_expires_in)    {1000}
   let(:talking_token_scope)         {'service_mate'}
   let(:valid_talking_token_data)    {{'access_token' => valid_talking_token_value,
                                       'token_type'   => talking_token_type,
