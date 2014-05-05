@@ -31,6 +31,9 @@ describe "The service-connection gem is the messenger among ideas4all services. 
     let(:service_connection) {Service::Connection.new(caller_service:       caller_service,
                                                       called_service:       called_service,
                                                       authorizator_service: authorizator_service)}
+    before do
+      valid_talking_token_data.stub(:headers).and_return({})
+    end
 
     context "- Instantiation:" do
 

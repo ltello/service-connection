@@ -62,8 +62,18 @@ describe 'Requests to the Called service endpoints are made via a Service::Conne
            a call to #maybe_renewing_talking_token to repeat the request in case the talking_token used is not valid anymore
            (revoked, expired, invalid, ..., missing) and need to be automatically renewed (requested again to the Authorizator
            service).' do
-    let(:valid_return_data) {{'valid data' => 'yes'}}
-    let(:invalid_talking_token_data) {double(:error => double(:code => Service::Connection::Response::REMOTE_SERVICE_INVALID_TALKING_TOKEN_ERROR_CODES.first))}
+    let(:valid_return_data)          {double(:headers => {}, :[] => 'yes')}
+    let(:no_http_response_data)      {double}
+    let(:invalid_talking_token_data) {double(:error => double(:code => Service::Connection::Response::REMOTE_SERVICE_INVALID_TALKING_TOKEN_ERROR_CODES.first), :headers => {})}
+
+    context 'if the block given to #maybe_renewing_talking_token do not return an http response object (object responding to #header => Hash instance)...' do
+      it "...the response cannot be declared to be invalid because of its heades and repeat the request renewing the talking token" do
+        service_connection.send(:talking_token).stub(:get).with('/endpoint').and_return(no_http_response_data)
+        block = Proc.new {service_connection.send(:talking_token).get('/endpoint')}
+        service_connection.send(:maybe_renewing_talking_token, &block)
+        expect(service_connection.send(:talking_token)).to have_received(:get).once
+      end
+    end
 
     it '#maybe_renewing_talking_token executes the given block once...' do
       service_connection.send(:talking_token).stub(:get).with('/endpoint').and_return(valid_return_data)

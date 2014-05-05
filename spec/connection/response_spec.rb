@@ -18,17 +18,24 @@ describe 'The response of the Called service to a request to access its api, dif
                                                                     called_service:       called_service,
                                                                     authorizator_service: authorizator_service)}
   let(:invalid_talking_token_error_codes)         {Service::Connection::Response::REMOTE_SERVICE_INVALID_TALKING_TOKEN_ERROR_CODES}
-  let(:no_error_responding_response)              {double}
-  let(:error_blank_response)                      {double(:error => nil)}
-  let(:invalid_talking_token_error_code_response) {double(:error => double(:code => invalid_talking_token_error_codes.first))}
-  let(:no_invalid_talking_token_error_response)   {double(:error => double(:code => 7), :headers => {})}
+  let(:no_http_response)                          {double}
+  let(:no_error_responding_response)              {double(:headers => {})}
+  let(:error_blank_response)                      {double(:headers => {}, :error => nil)}
+  let(:invalid_talking_token_error_code_response) {double(:headers => {}, :error => double(:code => invalid_talking_token_error_codes.first))}
+  let(:no_invalid_talking_token_error_response)   {double(:headers => {}, :error => double(:code => 7), :headers => {})}
 
   context '#invalid_talking_token_response?(resp):' do
-    it 'returns false when the response do not respond to #error,' do
+    it 'checks the response headers it the response object responds to #headers.' do
+      Regexp.stub(:new).and_return(nil)
+      service_connection.send(:invalid_talking_token_response?, no_http_response)
+      expect(Regexp).not_to have_received(:new)
+    end
+
+    it 'returns false when the response do not respond to #error...' do
       expect(service_connection.send(:invalid_talking_token_response?, no_error_responding_response)).to be_false
     end
 
-    it 'or the error object is present.' do
+    it '...or the error object is present.' do
       expect(service_connection.send(:invalid_talking_token_response?, error_blank_response)).to be_false
     end
 
