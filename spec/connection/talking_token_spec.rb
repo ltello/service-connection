@@ -85,7 +85,7 @@ describe "A talking token is an object whose value must be included in the Autho
         let(:authorizator_service)  {invalid_service_class.new(nil, nil)}
       end
 
-      context "at instantitation time, a new talking token data from Authorizator service is obtained, so:" do
+      context "at instantiation time, a new talking token data from Authorizator service is obtained, so:" do
         let(:no_talking_token_data)                {nil}
         let(:empty_talking_token_data)             {{}}
         let(:no_hash_talking_token_data)           {"ajldkasfj"}
@@ -97,7 +97,6 @@ describe "A talking token is an object whose value must be included in the Autho
           authorizator_client.stub(:talking_token).and_return(valid_talking_token_data)
           Authorizator::Client.stub(:new).and_return(authorizator_client)
           OAuth2::Client.stub(:new).and_return(new_client_application)
-          # service_connection.stub(:talking_token).and_return(talking_token)
         end
 
         shared_examples "a talking token error if" do |title|
