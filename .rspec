@@ -1,2 +1,5 @@
 --color
---format nested
+--format documentation
+--require byebug
+--require spec_helper
+--pattern spec/README_spec.rb
