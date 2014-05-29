@@ -48,7 +48,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  bundler (~> 1.5)
+  bundler (~> 1.6)
   byebug (~> 3.1)
   rake
   rspec (= 3.0.0.rc1)
